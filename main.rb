@@ -2,5 +2,7 @@ require_relative 'lib/hash_map'
 
 hash_map = HashMap.new
 
-p Array.new(16)
-p hash_map.hash('ednis')
+hash_map.set('Denis', 42)
+hash_map.set('Anja', 52)
+
+p hash_map.buckets
