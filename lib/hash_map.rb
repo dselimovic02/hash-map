@@ -1,6 +1,7 @@
 require_relative 'node'
 
 class HashMap
+  attr_reader :buckets
   def initialize
     @buckets = Array.new(16)
     @capacity = 0
@@ -23,10 +24,24 @@ class HashMap
       @buckets[key_index] = Node.new(key, value)
       @capacity += 1
     else
-      @buckets[key_index].value = value
+      @buckets[key_index].add(Node.new(key, value))
     end
 
     check_capacity
+  end
+
+  def get(key)
+    key_index = hash(key)
+
+    node = @buckets[key_index] || nil
+    loop do
+      break if node.nil?
+      break if node.key.eql? key
+      node = node.next
+    end
+
+    
+    node.value || nil
   end
 
   def key?(key)
@@ -60,18 +75,38 @@ class HashMap
   end
 
   def entries 
-    keys = self.keys
-    values = self.values
-    ary = []
-    @capacity.times do |i|
-       ary << [keys[i], values[i]]
+    print '{'
+    str = ''
+    @buckets.each_with_index do |bucket, i|
+      unless bucket.nil?
+        str += "#{bucket}, "
+      end
     end
-    ary
+    print "#{str[0..-3]}}\n"
   end
 
   private
 
   def check_capacity
-    @buckets += Array.new(16) if @capacity > @buckets.length * @load_factor
+    if @capacity > @buckets.length * @load_factor
+      pairs = get_pairs
+
+      @buckets = Array.new(@buckets.length * 2)
+
+      pairs.each { |pair| set(pair[0], pair[1]) } 
+    end
+  end
+
+  def get_pairs
+    ary = []
+    @buckets.each do |bucket|
+      next if bucket.nil?
+      if bucket.next.nil?
+        ary << [bucket.key, bucket.value]
+      else 
+        ary += bucket.get_pairs
+      end
+    end
+    ary
   end
 end
